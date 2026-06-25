@@ -210,6 +210,145 @@ tr.highlighted td:first-child { box-shadow: inset 3px 0 0 #58a6ff; }
   body * { display: none !important; }
 }
 
+/* ===================== MOBILE / IPHONE ===================== */
+@media (max-width: 768px) {
+
+  /* Allow page to scroll vertically */
+  body { height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
+
+  /* Password gate — full width on small screens */
+  .pw-box { width: calc(100% - 32px); padding: 28px 20px; }
+  .pw-logo { font-size: 22px; }
+
+  /* ---- Header ---- */
+  .header { padding: 10px 12px; flex-wrap: wrap; gap: 8px; }
+  .header-left h1 { font-size: 13px; }
+  .header-left .sub { font-size: 10px; }
+  .header-stats { gap: 5px; flex-wrap: wrap; justify-content: flex-start; }
+  .stat-box { min-width: 54px; padding: 5px 8px; }
+  .stat-box .val { font-size: 15px; }
+  .stat-box .lbl { font-size: 9px; }
+
+  /* ---- Tab bar — horizontally scrollable ---- */
+  .tab-bar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 6px;
+    gap: 0;
+    scrollbar-width: none;
+  }
+  .tab-bar::-webkit-scrollbar { display: none; }
+  .tab-divider { display: none; }
+  .tab { padding: 8px 10px; font-size: 12px; }
+  .tab-sub { font-size: 9px; }
+  .tab .count { font-size: 9px; padding: 1px 4px; }
+
+  /* ---- Main layout — vertical stack ---- */
+  .main { flex-direction: column; overflow-y: visible; height: auto; }
+
+  /* ---- Sidebar — horizontal scrolling strip of names ---- */
+  .sidebar {
+    width: 100%;
+    min-width: 0;
+    border-right: none;
+    border-bottom: 1px solid #30363d;
+    flex-direction: row;
+    max-height: none;
+    height: auto;
+    overflow: hidden;
+  }
+  .sidebar-head { display: none; }
+  .sidebar-search {
+    padding: 8px;
+    border-bottom: none;
+    border-right: 1px solid #30363d;
+    flex-shrink: 0;
+    width: 130px;
+    display: flex;
+    align-items: center;
+  }
+  .sidebar-list {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex: 1;
+  }
+  .sidebar-list::-webkit-scrollbar { display: none; }
+  .clinician-row {
+    flex-direction: column;
+    align-items: flex-start;
+    border-left: none;
+    border-bottom: 3px solid transparent;
+    min-width: 110px;
+    padding: 7px 10px;
+    white-space: nowrap;
+  }
+  .clinician-row:hover { border-left-color: transparent; border-bottom-color: #58a6ff44; }
+  .clinician-row.active {
+    background: #1f2d40;
+    border-left-color: transparent;
+    border-bottom-color: #58a6ff;
+    color: #58a6ff;
+  }
+  .los-dot { display: none; }
+
+  /* ---- Content area ---- */
+  .content { flex: none; }
+  .content-main { overflow: visible; height: auto; }
+  .table-section { overflow: visible; height: auto; }
+  .notice { margin: 8px 10px 0; font-size: 11px; padding: 6px 10px; }
+
+  /* ---- Controls bar ---- */
+  .controls { padding: 6px 10px 4px; flex-wrap: wrap; gap: 6px; }
+  .controls-right { margin-left: 0; flex-wrap: wrap; gap: 6px; }
+  .legend { gap: 8px; }
+  .legend-item { font-size: 10px; }
+  .filter-group { gap: 5px; }
+  .filter-label { font-size: 10px; }
+  .filter-input { width: 56px; font-size: 11px; }
+  .filter-status { font-size: 10px; }
+  .period-toggle { flex-wrap: nowrap; }
+  .period-btn { padding: 4px 8px; font-size: 10px; }
+
+  /* ---- Table — horizontally scrollable ---- */
+  .table-wrap {
+    margin: 0 8px 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 6px;
+  }
+  .table-wrap::-webkit-scrollbar { height: 4px; background: #21262d; border-radius: 2px; }
+  .table-wrap::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+  table { min-width: 520px; }
+  th { padding: 8px 10px; font-size: 10px; }
+  td { padding: 7px 10px; font-size: 12px; }
+  .los-bar-wrap { display: none; }
+  .los-num { font-size: 12px; }
+  .pph-num { font-size: 12px; }
+
+  /* ---- Report panel — full screen overlay on mobile ---- */
+  .report-panel.open {
+    position: fixed;
+    inset: 0;
+    width: 100% !important;
+    min-width: 0 !important;
+    z-index: 300;
+    overflow-y: auto;
+    border-left: none;
+    border-top: 2px solid #30363d;
+  }
+  .report-scroll { overflow-y: visible; }
+  .rp-name { font-size: 16px; }
+  .rp-stats { flex-wrap: wrap; gap: 6px; }
+  .rp-stat .sv { font-size: 15px; }
+  .metric-cards { padding: 10px 14px; gap: 8px; }
+  .mc-value { font-size: 20px; }
+}
+/* ===================== END MOBILE ===================== */
+
 /* Period toggle */
 .period-toggle { display: flex; align-items: center; gap: 4px; background: #21262d; border: 1px solid #30363d; border-radius: 6px; padding: 3px; }
 .period-btn { padding: 4px 10px; font-size: 11px; border-radius: 4px; cursor: pointer; color: #8b949e; background: none; border: none; font-family: inherit; transition: all 0.12s; white-space: nowrap; }
