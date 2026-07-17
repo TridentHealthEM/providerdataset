@@ -377,6 +377,42 @@ tr.highlighted td:first-child { box-shadow: inset 3px 0 0 #58a6ff; }
 .period-btn:hover:not(.active) { color: #c9d1d9; }
 .m26-badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: rgba(88,166,255,0.15); color: #58a6ff; margin-left: 4px; }
 .night-badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 6px; background: rgba(139,92,246,0.2); color: #a78bfa; margin-left: 5px; letter-spacing: 0.3px; vertical-align: middle; }
+/* ── Multi-period report ─────────────────────────────────── */
+.rp-vol-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; padding: 12px 18px; border-bottom: 1px solid #30363d; }
+.rp-vol-cell { background: #21262d; border: 1px solid #30363d; border-radius: 6px; padding: 7px 8px; text-align: center; }
+.rp-vol-cell .rvc-val { font-size: 16px; font-weight: 700; color: #58a6ff; line-height: 1; }
+.rp-vol-cell .rvc-sub { font-size: 9px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 3px; }
+.rp-vol-cell .rvc-label { font-size: 9px; color: #484f58; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 1px; }
+.rp-vol-cell.rvc-jun .rvc-val { color: #3fb950; }
+.perf-section { padding: 12px 18px 6px; }
+.perf-section-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px; color: #8b949e; margin-bottom: 8px; }
+.perf-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.perf-table th { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #484f58; padding: 0 6px 5px; text-align: right; }
+.perf-table th:first-child { text-align: left; padding-left: 0; }
+.perf-table td { padding: 5px 6px; border-top: 1px solid #21262d; vertical-align: middle; text-align: right; }
+.perf-table td:first-child { text-align: left; padding-left: 0; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: #8b949e; }
+.perf-table tr:hover td { background: #1c2128; }
+.pt-annual { color: #c9d1d9; font-weight: 600; }
+.pt-period { color: #8b949e; }
+.pt-benchmark { display: block; font-size: 9px; color: #484f58; font-weight: 400; margin-top: 1px; }
+.pt-trend { text-align: center !important; white-space: nowrap; }
+.pt-arrow { font-size: 14px; font-weight: 700; line-height: 1; }
+.pt-delta { font-size: 9px; font-weight: 600; display: block; }
+.pt-na { color: #484f58; }
+.perf-tier-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: middle; flex-shrink: 0; }
+.sat-card { margin: 6px 18px 6px; background: #21262d; border: 1px solid #30363d; border-radius: 8px; padding: 10px 14px; }
+.sat-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.sat-card-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #8b949e; }
+.sat-card-value { font-size: 22px; font-weight: 700; }
+.sat-card-sub { font-size: 11px; color: #8b949e; }
+.rvu-card { margin: 0 18px 6px; background: #21262d; border: 1px solid #30363d; border-radius: 8px; padding: 10px 14px; }
+.rvu-card-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #8b949e; margin-bottom: 8px; }
+.rvu-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.rvu-label { font-size: 11px; color: #8b949e; }
+.rvu-vals { display: flex; gap: 14px; align-items: baseline; }
+.rvu-annual { font-size: 16px; font-weight: 700; color: #c9d1d9; }
+.rvu-bench { font-size: 10px; color: #484f58; }
+
 </style>
 </head>
 <body>
@@ -978,86 +1014,157 @@ function diff(val,bv,unit,invert) {
   return `<span style="color:${col};font-weight:600">${sign}${dFmt}${unit} vs cohort</span>`;
 }
 
+// ── Multi-period report helpers ──────────────────────────────────────────────
+function trendCell(newVal, oldVal, lowerIsBetter, unit, decimals) {
+  if (newVal == null || oldVal == null) return '<span class="pt-na">—</span>';
+  const delta = newVal - oldVal;
+  const pctChg = Math.abs(delta / (oldVal || 1)) * 100;
+  if (pctChg < 1.5) return '<span class="pt-na" style="font-size:11px">→</span>';
+  // lowerIsBetter===null → neutral/descriptive metric, always gray
+  const color = lowerIsBetter === null ? '#8b949e' : (lowerIsBetter ? (delta < 0 ? '#3fb950' : '#ff7b72') : (delta > 0 ? '#3fb950' : '#ff7b72'));
+  const arrow = delta > 0 ? '↑' : '↓';
+  const d = decimals != null ? Math.abs(delta).toFixed(decimals) : (Math.abs(delta) < 1 ? Math.abs(delta).toFixed(1) : Math.round(Math.abs(delta)));
+  const dSigned = (delta > 0 ? '+' : '-') + d;
+  return `<span class="pt-arrow" style="color:${color}">${arrow}</span><span class="pt-delta" style="color:${color}">${dSigned}${unit}</span>`;
+}
+
+function volCell(an, may, jun) {
+  const fmt = v => v != null ? v.toLocaleString() : '—';
+  return `
+    <div class="rp-vol-cell">
+      <div class="rvc-val">${fmt(an)}</div>
+      <div class="rvc-label">Annual</div>
+    </div>
+    <div class="rp-vol-cell">
+      <div class="rvc-val" style="color:#f0883e">${fmt(may)}</div>
+      <div class="rvc-label">May '26</div>
+    </div>
+    <div class="rp-vol-cell rvc-jun">
+      <div class="rvc-val">${fmt(jun)}</div>
+      <div class="rvc-label">Jun '26</div>
+    </div>`;
+}
+
+function perfRow(label, anVal, mayVal, junVal, bench, unit, decimals, lowerIsBetter, tierFn, benchLabel) {
+  const fmt = (v, d) => v != null ? (d != null ? v.toFixed(d) : v) + unit : '<span class="pt-na">—</span>';
+  const d = decimals;
+  const tier = anVal != null && bench != null ? tierFn(anVal, bench) : 'na';
+  const dotColor = {excellent:'#3fb950',good:'#56d364',average:'#f0883e',below:'#ffa657',poor:'#ff7b72',na:'#484f58','admit-vlow':'#79c0ff','admit-low':'#58a6ff','admit-avg':'#8b949e','admit-high':'#ffa657','admit-vhigh':'#ff7b72'};
+  const dot = `<span class="perf-tier-dot" style="background:${dotColor[tier]||'#484f58'}"></span>`;
+  const benchStr = bench != null && anVal != null ? `<span class="pt-benchmark">${benchLabel||'avg'}: ${typeof bench==='number'?(d!=null?bench.toFixed(d):bench)+unit:bench}</span>` : '';
+  const junColor = junVal != null ? (dotColor[tierFn ? tierFn(junVal, bench||0) : 'na'] || '#c9d1d9') : '#484f58';
+  return `<tr>
+    <td>${label}</td>
+    <td class="pt-annual">${dot}${fmt(anVal,d)}${benchStr}</td>
+    <td class="pt-period">${fmt(mayVal,d)}</td>
+    <td class="pt-period" style="color:${junColor};font-weight:${junVal!=null?'600':'400'}">${fmt(junVal,d)}</td>
+    <td class="pt-trend">${trendCell(junVal, mayVal, lowerIsBetter, unit, d)}</td>
+  </tr>`;
+}
+
 function showReport(name) {
   const c = getTabData().find(d=>d.name===name);
   if (!c) return;
   const t = curTab(), bench = getDynBench();
-  const cLos=getLOS(c), cPph=getPPH(c), cRet=getRet(c), cAdm=getAdmit(c), cVol=getVol(c), cHrs=getHours(c);
-  const cRvuHr=getRVUHr(c), cRvuPt=getRVUPt(c);
+  const displayName = fmtNameDisplay(c.name);
+  const nameLabel = curTab().isAPC ? displayName : 'Dr. ' + displayName;
+  const isAPC = curTab().isAPC;
+
+  // All-period raw values
+  const anVol=c.vol, anHrs=c.hours, anLos=c.los, anPph=c.pph, anRet=c.ret72, anAdm=c.admit;
+  const mVol=c.m26vol, mHrs=c.m26h, mLos=c.m26los, mPph=c.m26pph, mRet=c.m26ret, mAdm=c.m26adm;
+  const jVol=c.jun26vol, jHrs=c.jun26h, jLos=c.jun26los, jPph=c.jun26pph, jRet=c.jun26ret, jAdm=c.jun26adm;
+
+  // RVU
+  const cRvuHr=c.rvuhr, cRvuPt=c.rvupt;
   const rvuHrBench = getRVUHrBenchFor(c);
   const rvuPtBench  = getRVUPtBenchFor(c);
   const rvuHrLabel  = getRVUHrGroupLabelFor(c);
   const rvuPtLabel  = getRVUPtGroupLabelFor(c);
-  const losTi = losTier(cLos, bench.los);
-  const pphTi = pphTier(cPph, bench.pph);
-  const retTi = ret72Tier(cRet, bench.ret72);
-  const admTi = admitTier(cAdm, bench.admit);
+
   const satTi = satTier(c.sat);
-  const rvuHrTi = rvuHrBench ? pphTier(cRvuHr, rvuHrBench.rvuhr) : 'na';
-  const rvuPtTi = rvuPtBench  ? pphTier(cRvuPt, rvuPtBench.rvupt)  : 'na';
-  const displayName = fmtNameDisplay(c.name);
-  const nameLabel = curTab().isAPC ? displayName : 'Dr. ' + displayName;
+  const satColor = {excellent:'#3fb950',good:'#56d364',average:'#f0883e',below:'#ffa657',poor:'#ff7b72',na:'#484f58'}[satTi]||'#8b949e';
 
-  const losBars = cLos!=null ? barPcts(cLos, bench.los,   bench.los  *1.8) : {val:0,bench:50};
-  const pphBars = cPph!=null ? barPcts(cPph, bench.pph,   bench.pph  *1.8) : {val:0,bench:50};
-  const retBars = cRet!=null ? barPcts(cRet, bench.ret72, bench.ret72*3.2) : {val:0,bench:50};
-  const admBars = cAdm!=null ? barPcts(cAdm, bench.admit, bench.admit*3.0) : {val:0,bench:50};
-  const satBars = c.sat   !=null ? barPcts(c.sat,    75,           110)              : {val:0,bench:50};
-  const rvuHrBars = (rvuHrBench && cRvuHr!=null) ? barPcts(cRvuHr, rvuHrBench.rvuhr, rvuHrBench.rvuhr*1.8) : {val:0,bench:50};
-  const rvuPtBars = (rvuPtBench  && cRvuPt!=null) ? barPcts(cRvuPt, rvuPtBench.rvupt,  rvuPtBench.rvupt*1.8)  : {val:0,bench:50};
+  // Volume/hours summary grid
+  const volHtml = `
+    <div class="rp-vol-grid">
+      <div class="rp-vol-cell"><div class="rvc-val">${anVol!=null?anVol.toLocaleString():'—'}</div><div class="rvc-sub">Visits</div><div class="rvc-label">Annual</div></div>
+      <div class="rp-vol-cell"><div class="rvc-val" style="color:#f0883e">${mVol!=null?mVol.toLocaleString():'—'}</div><div class="rvc-sub">Visits</div><div class="rvc-label">May '26</div></div>
+      <div class="rp-vol-cell rvc-jun"><div class="rvc-val">${jVol!=null?jVol.toLocaleString():'—'}</div><div class="rvc-sub">Visits</div><div class="rvc-label">Jun '26</div></div>
+    </div>
+    <div class="rp-vol-grid" style="padding-top:0;border-bottom:1px solid #30363d">
+      <div class="rp-vol-cell"><div class="rvc-val">${anHrs!=null?anHrs.toLocaleString():'—'}</div><div class="rvc-sub">Hours</div><div class="rvc-label">Annual</div></div>
+      <div class="rp-vol-cell"><div class="rvc-val" style="color:#f0883e">${mHrs!=null?mHrs.toLocaleString():'—'}</div><div class="rvc-sub">Hours</div><div class="rvc-label">May '26</div></div>
+      <div class="rp-vol-cell rvc-jun"><div class="rvc-val">${jHrs!=null?jHrs.toLocaleString():'—'}</div><div class="rvc-sub">Hours</div><div class="rvc-label">Jun '26</div></div>
+    </div>`;
 
+  // Performance comparison table
+  const hasPerf = anLos!=null||anPph!=null||anRet!=null||anAdm!=null;
+  const perfHtml = hasPerf ? `
+    <div class="perf-section">
+      <div class="perf-section-title">Performance &mdash; All Periods</div>
+      <table class="perf-table">
+        <thead><tr>
+          <th>Metric</th>
+          <th>Annual</th>
+          <th>May '26</th>
+          <th>Jun '26</th>
+          <th style="text-align:center">Trend</th>
+        </tr></thead>
+        <tbody>
+          ${anLos!=null||mLos!=null||jLos!=null ? perfRow('LOS',anLos,mLos,jLos,bench.los,' min',0,true,losTier,'avg') : ''}
+          ${anPph!=null||mPph!=null||jPph!=null ? perfRow('Pts/Hr',anPph,mPph,jPph,bench.pph,'',2,false,pphTier,'avg') : ''}
+          ${anRet!=null||mRet!=null||jRet!=null ? perfRow('72hr Ret',anRet,mRet,jRet,bench.ret72,'%',1,true,ret72Tier,'avg') : ''}
+          ${anAdm!=null||mAdm!=null||jAdm!=null ? perfRow('Admit',anAdm,mAdm,jAdm,bench.admit,'%',1,null,()=>'admit-avg','avg') : ''}
+        </tbody>
+      </table>
+    </div>` : '';
 
-  // Comments HTML
-  const comms = c.comments || [];
-  const positive = comms.filter(x=>x.r==='Positive');
-  const negative = comms.filter(x=>x.r==='Negative');
-  const other    = comms.filter(x=>x.r!=='Positive'&&x.r!=='Negative');
-  const allComms = [...positive, ...negative, ...other];
-  
-  let commHtml = '';
-  if (allComms.length > 0) {
-    commHtml = allComms.map(cc => `
-      <div class="comment-card">
-        <div class="comment-meta">
-          <span class="comment-rating rating-${cc.r}">${cc.r}</span>
-          <span class="comment-fac">${cc.f}</span>
-        </div>
-        <div class="comment-text">${cc.t.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
-      </div>`).join('');
-  } else {
-    commHtml = '<div class="no-comments">No patient comments on record</div>';
+  // Patient satisfaction card
+  const satHtml = c.sat!=null ? `
+    <div class="sat-card">
+      <div class="sat-card-top">
+        <span class="sat-card-label">Patient Satisfaction</span>
+        <span class="mc-badge bg-${satTi}">${tierLabel[satTi]} &nbsp;·&nbsp; Higher better</span>
+      </div>
+      <div class="sat-card-value" style="color:${satColor}">${c.sat}%</div>
+      <div class="sat-card-sub">Top Box &nbsp;·&nbsp; n=${c.satN} surveys &nbsp;·&nbsp; Benchmark 75%</div>
+    </div>` : '';
+
+  // RVU card (MD only, annual only)
+  let rvuHtml = '';
+  if (!isAPC && (cRvuHr!=null || cRvuPt!=null)) {
+    const rvuHrTi = rvuHrBench ? pphTier(cRvuHr, rvuHrBench.rvuhr) : 'na';
+    const rvuPtTi = rvuPtBench ? pphTier(cRvuPt, rvuPtBench.rvupt) : 'na';
+    const rvuHrColor = {excellent:'#3fb950',good:'#56d364',average:'#f0883e',below:'#ffa657',poor:'#ff7b72',na:'#484f58'}[rvuHrTi]||'#c9d1d9';
+    const rvuPtColor = {excellent:'#3fb950',good:'#56d364',average:'#f0883e',below:'#ffa657',poor:'#ff7b72',na:'#484f58'}[rvuPtTi]||'#c9d1d9';
+    rvuHtml = `<div class="rvu-card">
+      <div class="rvu-card-title">RVU Performance (Annual)</div>
+      ${cRvuHr!=null&&rvuHrBench?`<div class="rvu-row"><span class="rvu-label">RVU / Hour</span><span class="rvu-vals"><span class="rvu-annual" style="color:${rvuHrColor}">${cRvuHr.toFixed(2)}</span><span class="rvu-bench">${rvuHrLabel}: ${rvuHrBench.rvuhr.toFixed(2)}</span></span></div>`:''}
+      ${cRvuPt!=null&&rvuPtBench?`<div class="rvu-row"><span class="rvu-label">RVU / Patient</span><span class="rvu-vals"><span class="rvu-annual" style="color:${rvuPtColor}">${cRvuPt.toFixed(2)}</span><span class="rvu-bench">${rvuPtLabel}: ${rvuPtBench.rvupt.toFixed(2)}</span></span></div>`:''}
+    </div>`;
   }
 
-  const satSection = c.sat!=null ? metricCard(
-    'Patient Satisfaction',
-    c.sat+'%',
-    `Top Box score &nbsp;·&nbsp; n=${c.satN} surveys &nbsp;·&nbsp; Benchmark: 75%`,
-    satBars.val, satBars.bench, satTi, 'Higher is better'
-  ) : `<div class="metric-card"><div class="mc-top"><span class="mc-label">Patient Satisfaction</span></div><div class="mc-value c-na">—</div><div class="mc-subtext" style="color:#484f58">No survey data available</div></div>`;
+  // Comments
+  const comms = c.comments || [];
+  const allComms = [...comms.filter(x=>x.r==='Positive'), ...comms.filter(x=>x.r==='Negative'), ...comms.filter(x=>x.r!=='Positive'&&x.r!=='Negative')];
+  const commHtml = allComms.length > 0
+    ? allComms.map(cc=>`<div class="comment-card"><div class="comment-meta"><span class="comment-rating rating-${cc.r}">${cc.r}</span><span class="comment-fac">${cc.f}</span></div><div class="comment-text">${cc.t.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div></div>`).join('')
+    : '<div class="no-comments">No patient comments on record</div>';
 
   const html = `
     <div class="rp-header">
       <div class="rp-title-row">
         <div class="rp-name">${nameLabel}</div>
-        <button class="rp-close" onclick="selectClinician('${c.name.replace(/'/g,"\'")}')">✕</button>
+        <button class="rp-close" onclick="selectClinician('${c.name.replace(/'/g,"\\'")}')">✕</button>
       </div>
       <div style="margin-top:6px"><span class="rp-cohort-tag">${t.sub}</span></div>
-      <div class="rp-meta">${t.site} &nbsp;·&nbsp; ${t.period}</div>
+      <div class="rp-meta">${t.site}</div>
     </div>
-    <div class="rp-stats">
-      <div class="rp-stat"><div class="sv">${cVol!=null?cVol.toLocaleString():'—'}</div><div class="sl">${viewPeriod==='may26'?'May Visits':viewPeriod==='jun26'?'Jun Visits':'Total Visits'}</div></div>
-      <div class="rp-stat"><div class="sv">${cHrs!=null?cHrs.toLocaleString():'—'}</div><div class="sl">${viewPeriod==='may26'?'May Hours':viewPeriod==='jun26'?'Jun Hours':'Hours Worked'}</div></div>
-      ${c.sat!=null?`<div class="rp-stat"><div class="sv" style="color:${dotColor[satTi]}">${c.sat}%</div><div class="sl">Patient Sat</div></div>`:''}
-    </div>
-    <div class="metric-cards">
-      ${cLos!=null?metricCard('Median Length of Stay',cLos+' min',`Cohort avg: ${bench.los} min &nbsp;&nbsp;${diff(cLos,bench.los,' min',true)}`,losBars.val,losBars.bench,losTi,'Lower is better'):''}
-      ${cPph!=null?metricCard('Patients Per Hour',cPph.toFixed(2),`Cohort avg: ${bench.pph.toFixed(2)} &nbsp;&nbsp;${diff(cPph,bench.pph,'',false)}`,pphBars.val,pphBars.bench,pphTi,'Higher is better'):''}
-      ${cRet!=null?metricCard('72-Hour Return Rate',cRet.toFixed(1)+'%',`Cohort avg: ${bench.ret72.toFixed(1)}% &nbsp;&nbsp;${diff(cRet,bench.ret72,'%',true)}`,retBars.val,retBars.bench,retTi,'Lower is better'):''}
-      ${cAdm!=null?admitMetricCard('Admission Rate',cAdm.toFixed(1)+'%',`Cohort avg: ${bench.admit.toFixed(1)}% &nbsp;&nbsp;<span style="color:#8b949e">Descriptive — reflects acuity</span>`,admBars.val,admBars.bench,admTi):''}
-      ${satSection}
-      ${(rvuHrBench && cRvuHr!=null)?metricCard('RVU per Hour',cRvuHr.toFixed(2),`${rvuHrLabel}: ${rvuHrBench.rvuhr.toFixed(2)} &nbsp;&nbsp;${diff(cRvuHr,rvuHrBench.rvuhr,'',false)}`,rvuHrBars.val,rvuHrBars.bench,rvuHrTi,'Higher is better'):''}
-      ${(rvuPtBench  && cRvuPt!=null)?metricCard('RVU per Patient',cRvuPt.toFixed(2),`${rvuPtLabel}: ${rvuPtBench.rvupt.toFixed(2)} &nbsp;&nbsp;${diff(cRvuPt,rvuPtBench.rvupt,'',false)}`,rvuPtBars.val,rvuPtBars.bench,rvuPtTi,'Higher is better'):''}
-    </div>
+    ${volHtml}
+    ${perfHtml}
+    ${satHtml}
+    ${rvuHtml}
     <div class="comments-section">
       <div class="comments-header">Patient Comments <span class="comments-count">${allComms.length}</span></div>
       ${commHtml}
@@ -1104,41 +1211,80 @@ function buildFacilitySectionHTML(c, tab) {
   const rvuPtBench  = getRVUPtBenchFor(c);
   const rvuHrLabel  = getRVUHrGroupLabelFor(c);
   const rvuPtLabel  = getRVUPtGroupLabelFor(c, tab);
-  const cLos=getLOS(c), cPph=getPPH(c), cRet=getRet(c), cAdm=getAdmit(c), cVol=getVol(c), cHrs=getHours(c);
-  const cRvuHr=getRVUHr(c), cRvuPt=getRVUPt(c);
-  const losTi = losTier(cLos, bench.los);
-  const pphTi = pphTier(cPph, bench.pph);
-  const retTi = ret72Tier(cRet, bench.ret72);
-  const admTi = admitTier(cAdm, bench.admit);
-  const satTi = satTier(c.sat);
-  const rvuHrTi = rvuHrBench ? pphTier(cRvuHr, rvuHrBench.rvuhr) : 'na';
-  const rvuPtTi = rvuPtBench  ? pphTier(cRvuPt, rvuPtBench.rvupt)  : 'na';
-  const losBars = cLos!=null ? barPcts(cLos, bench.los,    bench.los   *1.8) : {val:0,bench:50};
-  const pphBars = cPph!=null ? barPcts(cPph, bench.pph,    bench.pph   *1.8) : {val:0,bench:50};
-  const retBars = cRet!=null ? barPcts(cRet, bench.ret72,  bench.ret72 *3.2) : {val:0,bench:50};
-  const admBars = cAdm!=null ? barPcts(cAdm, bench.admit,  bench.admit *3.0) : {val:0,bench:50};
-  const satBars = c.sat!=null ? barPcts(c.sat, 75, 110)                       : {val:0,bench:50};
-  const rvuHrBars = (rvuHrBench && cRvuHr!=null) ? barPcts(cRvuHr, rvuHrBench.rvuhr, rvuHrBench.rvuhr*1.8) : {val:0,bench:50};
-  const rvuPtBars = (rvuPtBench  && cRvuPt!=null) ? barPcts(cRvuPt, rvuPtBench.rvupt,  rvuPtBench.rvupt*1.8)  : {val:0,bench:50};
-  const satCard = c.sat!=null
-    ? metricCard('Patient Satisfaction', c.sat+'%', `Top Box &nbsp;·&nbsp; n=${c.satN} surveys &nbsp;·&nbsp; Benchmark: 75%`, satBars.val, satBars.bench, satTi, 'Higher is better')
-    : '';
+  const isAPC = tab.isAPC;
+
+  // All-period values
+  const anVol=c.vol, anHrs=c.hours, anLos=c.los, anPph=c.pph, anRet=c.ret72, anAdm=c.admit;
+  const mVol=c.m26vol, mHrs=c.m26h, mLos=c.m26los, mPph=c.m26pph, mRet=c.m26ret, mAdm=c.m26adm;
+  const jVol=c.jun26vol, jHrs=c.jun26h, jLos=c.jun26los, jPph=c.jun26pph, jRet=c.jun26ret, jAdm=c.jun26adm;
+  const cRvuHr=c.rvuhr, cRvuPt=c.rvupt;
+
+  const dotC = {excellent:'#059669',good:'#059669',average:'#92400e',below:'#c05621',poor:'#dc2626',na:'#9ca3af','admit-vlow':'#1e40af','admit-low':'#1e40af','admit-avg':'#374151','admit-high':'#c05621','admit-vhigh':'#dc2626'};
+
+  function pRow(label, anV, mV, jV, bv, unit, dec, lower, tierFn) {
+    const f = (v,d) => v!=null ? (d!=null?v.toFixed(d):v)+unit : '—';
+    const tier = anV!=null&&bv!=null ? tierFn(anV,bv) : 'na';
+    const dot = `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${dotC[tier]||'#9ca3af'};margin-right:4px;vertical-align:middle"></span>`;
+    const benchTxt = bv!=null&&anV!=null ? `<small style="color:#9ca3af;display:block;font-size:9px">avg: ${typeof bv==='number'?(dec!=null?bv.toFixed(dec):bv)+unit:bv}</small>` : '';
+    const delta = (jV!=null&&mV!=null) ? jV-mV : null;
+    let trendHtml = '—';
+    if (delta!=null) {
+      const pct = Math.abs(delta/(mV||1))*100;
+      if (pct>=1.5) {
+        const imp = lower ? delta<0 : delta>0;
+        const col = imp?'#059669':'#dc2626';
+        const arr = delta>0?'↑':'↓';
+        const ds = (dec!=null?Math.abs(delta).toFixed(dec):Math.round(Math.abs(delta)));
+        trendHtml = `<span style="color:${col};font-weight:700">${arr}</span> <span style="color:${col};font-size:9px">${delta>0?'+':'-'}${ds}${unit}</span>`;
+      } else { trendHtml = '<span style="color:#9ca3af">→</span>'; }
+    }
+    const jColor = jV!=null ? (dotC[tierFn?tierFn(jV,bv||0):'na']||'#374151') : '#9ca3af';
+    return `<tr>
+      <td>${label}</td>
+      <td>${dot}${f(anV,dec)}${benchTxt}</td>
+      <td>${f(mV,dec)}</td>
+      <td style="color:${jColor};font-weight:${jV!=null?600:400}">${f(jV,dec)}</td>
+      <td style="text-align:center">${trendHtml}</td>
+    </tr>`;
+  }
+
+  const satTi = ['excellent','good','average','below','poor'][c.sat>=90?0:c.sat>=80?1:c.sat>=70?2:c.sat>=60?3:4]||'na';
+  const satColor = dotC[satTi]||'#374151';
+
   return `<div class="fac-section">
     <div class="fac-header"><span class="fac-name">${tab.site}</span><span class="fac-sub">${tab.sub}</span></div>
-    <div class="rp-stats">
-      <div class="rp-stat"><div class="sv">${cVol!=null?cVol.toLocaleString():'—'}</div><div class="sl">${viewPeriod==='may26'?'May Visits':viewPeriod==='jun26'?'Jun Visits':'Total Visits'}</div></div>
-      <div class="rp-stat"><div class="sv">${cHrs!=null?cHrs.toLocaleString():'—'}</div><div class="sl">${viewPeriod==='may26'?'May Hours':viewPeriod==='jun26'?'Jun Hours':'Hours Worked'}</div></div>
-      ${c.sat!=null?`<div class="rp-stat"><div class="sv" style="color:${dotColor[satTi]}">${c.sat}%</div><div class="sl">Patient Sat</div></div>`:''}
-    </div>
-    <div class="metric-cards">
-      ${cLos!=null?metricCard('Median LOS',cLos+' min',`Cohort avg: ${bench.los} min &nbsp;&nbsp;${diff(cLos,bench.los,' min',true)}`,losBars.val,losBars.bench,losTi,'Lower is better'):''}
-      ${cPph!=null?metricCard('Patients Per Hour',cPph.toFixed(2),`Cohort avg: ${bench.pph.toFixed(2)} &nbsp;&nbsp;${diff(cPph,bench.pph,'',false)}`,pphBars.val,pphBars.bench,pphTi,'Higher is better'):''}
-      ${cRet!=null?metricCard('72-Hr Return Rate',cRet.toFixed(1)+'%',`Cohort avg: ${bench.ret72.toFixed(1)}% &nbsp;&nbsp;${diff(cRet,bench.ret72,'%',true)}`,retBars.val,retBars.bench,retTi,'Lower is better'):''}
-      ${cAdm!=null?admitMetricCard('Admission Rate',cAdm.toFixed(1)+'%',`Cohort avg: ${bench.admit.toFixed(1)}% &nbsp;&nbsp;<span style="color:#555">Descriptive — reflects acuity</span>`,admBars.val,admBars.bench,admTi):''}
-      ${satCard}
-      ${(rvuHrBench && cRvuHr!=null)?metricCard('RVU per Hour',cRvuHr.toFixed(2),`${rvuHrLabel}: ${rvuHrBench.rvuhr.toFixed(2)} &nbsp;&nbsp;${diff(cRvuHr,rvuHrBench.rvuhr,'',false)}`,rvuHrBars.val,rvuHrBars.bench,rvuHrTi,'Higher is better'):''}
-      ${(rvuPtBench  && cRvuPt!=null)?metricCard('RVU per Patient',cRvuPt.toFixed(2),`${rvuPtLabel}: ${rvuPtBench.rvupt.toFixed(2)} &nbsp;&nbsp;${diff(cRvuPt,rvuPtBench.rvupt,'',false)}`,rvuPtBars.val,rvuPtBars.bench,rvuPtTi,'Higher is better'):''}
-    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px">
+      <thead><tr style="border-bottom:1px solid #e5e7eb">
+        <th style="text-align:left;padding:4px 6px 4px 0;color:#6b7280;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600"></th>
+        <th style="text-align:right;padding:4px 6px;color:#6b7280;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Annual</th>
+        <th style="text-align:right;padding:4px 6px;color:#6b7280;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">May '26</th>
+        <th style="text-align:right;padding:4px 6px;color:#6b7280;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Jun '26</th>
+        <th style="text-align:center;padding:4px 6px;color:#6b7280;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Trend</th>
+      </tr>
+      <tr style="border-bottom:1px solid #e5e7eb">
+        <td style="padding:4px 6px 4px 0;font-size:10px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px">Visits</td>
+        <td style="text-align:right;padding:4px 6px;font-weight:700;color:#111">${anVol!=null?anVol.toLocaleString():'—'}</td>
+        <td style="text-align:right;padding:4px 6px;color:#374151">${mVol!=null?mVol.toLocaleString():'—'}</td>
+        <td style="text-align:right;padding:4px 6px;color:#374151">${jVol!=null?jVol.toLocaleString():'—'}</td>
+        <td style="text-align:center;padding:4px 6px;color:#9ca3af">—</td>
+      </tr>
+      <tr style="border-bottom:1px solid #e5e7eb">
+        <td style="padding:4px 6px 4px 0;font-size:10px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px">Hours</td>
+        <td style="text-align:right;padding:4px 6px;font-weight:700;color:#111">${anHrs!=null?anHrs.toLocaleString():'—'}</td>
+        <td style="text-align:right;padding:4px 6px;color:#374151">${mHrs!=null?mHrs.toLocaleString():'—'}</td>
+        <td style="text-align:right;padding:4px 6px;color:#374151">${jHrs!=null?jHrs.toLocaleString():'—'}</td>
+        <td style="text-align:center;padding:4px 6px;color:#9ca3af">—</td>
+      </tr></thead>
+      <tbody>
+        ${anLos!=null||mLos!=null||jLos!=null?pRow('LOS (min)',anLos,mLos,jLos,bench.los,' min',0,true,losTier):''}
+        ${anPph!=null||mPph!=null||jPph!=null?pRow('Pts / Hr',anPph,mPph,jPph,bench.pph,'',2,false,pphTier):''}
+        ${anRet!=null||mRet!=null||jRet!=null?pRow('72hr Return',anRet,mRet,jRet,bench.ret72,'%',1,true,ret72Tier):''}
+        ${anAdm!=null||mAdm!=null||jAdm!=null?pRow('Admit Rate',anAdm,mAdm,jAdm,bench.admit,'%',1,false,()=>'admit-avg'):''}
+      </tbody>
+    </table>
+    ${c.sat!=null?`<div style="margin-bottom:8px;padding:8px 10px;background:#f9f9f9;border:1px solid #e5e7eb;border-radius:6px"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280">Patient Sat</span> &nbsp; <span style="font-size:18px;font-weight:700;color:${satColor}">${c.sat}%</span> <span style="font-size:10px;color:#6b7280">Top Box &nbsp;·&nbsp; n=${c.satN} &nbsp;·&nbsp; Benchmark 75%</span></div>`:''}
+    ${(!isAPC&&cRvuHr!=null&&rvuHrBench)?`<div style="margin-bottom:8px;padding:8px 10px;background:#f9f9f9;border:1px solid #e5e7eb;border-radius:6px;font-size:11px"><span style="font-weight:700;text-transform:uppercase;font-size:10px;letter-spacing:0.5px;color:#6b7280">RVU / Hr</span> &nbsp; <span style="font-weight:700;font-size:15px;color:#111">${cRvuHr.toFixed(2)}</span> <span style="color:#9ca3af">${rvuHrLabel}: ${rvuHrBench.rvuhr.toFixed(2)}</span></div>`:''}
+    ${(!isAPC&&cRvuPt!=null&&rvuPtBench)?`<div style="margin-bottom:8px;padding:8px 10px;background:#f9f9f9;border:1px solid #e5e7eb;border-radius:6px;font-size:11px"><span style="font-weight:700;text-transform:uppercase;font-size:10px;letter-spacing:0.5px;color:#6b7280">RVU / Pt</span> &nbsp; <span style="font-weight:700;font-size:15px;color:#111">${cRvuPt.toFixed(2)}</span> <span style="color:#9ca3af">${rvuPtLabel}: ${rvuPtBench.rvupt.toFixed(2)}</span></div>`:''}
   </div>`;
 }
 
@@ -1196,6 +1342,9 @@ function printReport() {
   .fac-name{font-size:15px;font-weight:700;color:#111}
   .fac-sub{font-size:11px;font-weight:600;color:#6b7280;background:#f3f4f6;padding:2px 7px;border-radius:4px}
   .rp-stats{display:flex;gap:8px;padding:8px 0 10px;border-bottom:1px solid #e5e7eb;margin-bottom:10px}
+  tbody td{padding:4px 6px;border-top:1px solid #f3f4f6;font-size:11px;text-align:right}
+  tbody td:first-child{text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:#6b7280;padding-left:0}
+  tbody tr:hover td{background:#f9f9f9}
   .rp-stat{flex:1;background:#f7f8fa;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;text-align:center}
   .rp-stat .sv{font-size:17px;font-weight:700;color:#1a56db}
   .rp-stat .sl{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px}
